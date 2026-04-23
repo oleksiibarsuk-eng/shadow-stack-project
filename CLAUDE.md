@@ -29,6 +29,7 @@ ESLint uses the flat-config format (`eslint.config.js`) with `@eslint/js` recomm
 ## CI
 
 `.github/workflows/ci.yml` runs `npm ci` then `npm run build` on:
+
 - push to `main`
 - pull_request into `main`
 - manual `workflow_dispatch`

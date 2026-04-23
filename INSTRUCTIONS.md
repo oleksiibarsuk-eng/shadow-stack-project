@@ -77,12 +77,12 @@ CI прогоняет `npm ci` и `npm run build` на GitHub Actions при pus
 
 **Рекомендованная стратегия:**
 
-| Что запоминать | Куда |
-|---|---|
-| Команды проекта, стек, конвенции | `CLAUDE.md` |
-| Статус задач, идеи, ссылки между темами | Obsidian (`ObsidianVault/Projects/`) |
-| Факты, предпочтения, кросс-проектный контекст | MCP Memory (knowledge graph) |
-| Секреты, API-ключи, env-переменные | Doppler |
+| Что запоминать                                | Куда                                 |
+| --------------------------------------------- | ------------------------------------ |
+| Команды проекта, стек, конвенции              | `CLAUDE.md`                          |
+| Статус задач, идеи, ссылки между темами       | Obsidian (`ObsidianVault/Projects/`) |
+| Факты, предпочтения, кросс-проектный контекст | MCP Memory (knowledge graph)         |
+| Секреты, API-ключи, env-переменные            | Doppler                              |
 
 ---
 
@@ -101,9 +101,11 @@ CI прогоняет `npm ci` и `npm run build` на GitHub Actions при pus
 Работает сразу, без ключей. Хранит факты в локальном knowledge graph.
 
 Проверка:
+
 ```
 > запомни, что я предпочитаю Conventional Commits
 ```
+
 Claude использует `memory:create_entities`. В следующей сессии спросите — вспомнит.
 
 ### Doppler MCP — нужен токен
@@ -111,14 +113,17 @@ Claude использует `memory:create_entities`. В следующей се
 Два способа авторизации:
 
 **Способ А — интерактивный логин (разово):**
+
 ```bash
 npx @dopplerhq/mcp-server login
 ```
 
 **Способ Б — сервис-токен:**
+
 ```bash
 export DOPPLER_TOKEN="dp.st.dev.xxxx..."
 ```
+
 Сгенерируйте на https://dashboard.doppler.com → Project → Access.
 
 После авторизации перезапустите Claude Code. Без токена сервер не стартует, остальные MCP работают.
@@ -128,40 +133,52 @@ export DOPPLER_TOKEN="dp.st.dev.xxxx..."
 ## 5. Verification — как убедиться, что всё работает
 
 ### Проект собирается
+
 ```bash
 npm ci && npm run build
 ```
+
 Должно завершиться без ошибок, появиться `dist/index.html`.
 
 ### CI зелёный
+
 На GitHub: Actions → последний workflow run на ветке `claude/continue-per-docs-YFrsW` → зелёная галка.
 
 ### CLAUDE.md подхватывается
+
 Запустите `claude` в корне репо, задайте вопрос про команды — Claude должен ответить, не заглядывая в `package.json`.
 
 ### Obsidian MCP активен
+
 ```
 > создай в obsidian заметку "test" в папке References
 ```
+
 Claude должен использовать `obsidian:create_note` (или аналогичный) MCP tool. В `~/ObsidianVault/References/test.md` появится файл.
 
 ### MCP Memory активен
+
 ```
 > запомни, что я предпочитаю TypeScript над JavaScript
 ```
+
 Ответ должен содержать tool call `memory:create_entities`. В следующей сессии: `> что ты помнишь обо мне?`
 
 ### Doppler MCP активен
+
 ```
 > покажи секреты проекта в Doppler
 ```
+
 Claude использует `doppler:list_secrets`. Если видите список — Doppler подключён.
 
 ### Git status чистый
+
 ```bash
 git log --oneline -5
 git status
 ```
+
 Последние 4 коммита в `claude/continue-per-docs-YFrsW`: CI, refactor, docs (CLAUDE.md+README), MCP+instructions.
 
 ---
@@ -169,15 +186,18 @@ git status
 ## 6. Результат review проекта (что найдено)
 
 ### Баги / несогласованности
+
 1. **`@eslint/js` не объявлен в `devDependencies`** — работает транзитивно через `eslint`, но по-хорошему должен быть явным (стабильность при bump-е eslint).
 2. **CI не запускает lint** — документация говорит "lint должен быть зелёным", но `.github/workflows/ci.yml` прогоняет только `build`. Несоответствие.
 
 ### Полировка (низкий приоритет)
+
 - `index.html` без favicon и og-тегов
 - `vite.config.js` без `build.sourcemap` — отладка прод-сборки усложнена
 - Нет `.editorconfig`
 
 ### Что обычно есть в React+Vite стартере, но отсутствует
+
 - Тесты (Vitest / Jest) — сейчас 0 тестов
 - Prettier — форматирование только через ESLint rules
 - TypeScript
@@ -189,28 +209,33 @@ git status
 ## 7. Что ещё стоит подключить
 
 ### Приоритет 1 (исправить реальные проблемы)
+
 - [ ] Добавить `@eslint/js` в `devDependencies` явно
 - [ ] Добавить шаг `npm run lint` в `.github/workflows/ci.yml`
 
 ### Приоритет 2 (качество разработки)
+
 - [ ] **Vitest** — `npm i -D vitest @testing-library/react`, добавить `npm test` в CI
 - [ ] **Prettier** — `npm i -D prettier`, `.prettierrc`, интеграция с ESLint
 - [ ] **Husky + lint-staged** — пре-коммит хуки на lint/format
 - [ ] **LICENSE** (MIT/Apache-2.0)
 
 ### Приоритет 3 (дополнительные MCP)
-| MCP | Зачем |
-|---|---|
-| `@modelcontextprotocol/server-filesystem` | Расширенный доступ к FS за пределами репо |
+
+| MCP                                                | Зачем                                           |
+| -------------------------------------------------- | ----------------------------------------------- |
+| `@modelcontextprotocol/server-filesystem`          | Расширенный доступ к FS за пределами репо       |
 | `@modelcontextprotocol/server-sequential-thinking` | Структурированное рассуждение в сложных задачах |
-| `@modelcontextprotocol/server-fetch` | HTTP-запросы из Claude |
-| GitHub MCP | Уже подключён через сессию HQ |
-| Playwright MCP | E2E тестирование через Claude |
+| `@modelcontextprotocol/server-fetch`               | HTTP-запросы из Claude                          |
+| GitHub MCP                                         | Уже подключён через сессию HQ                   |
+| Playwright MCP                                     | E2E тестирование через Claude                   |
 
 Добавляются тем же способом — новая секция в `.mcp.json`.
 
 ### Приоритет 4 (скилы Claude Code)
+
 Уже применены: `init` (CLAUDE.md), `simplify` (ревью). Имеет смысл применить позже:
+
 - `review` — перед merge в main
 - `security-review` — перед публикацией
 - `session-start-hook` — если проект будет собираться на Claude Code web
