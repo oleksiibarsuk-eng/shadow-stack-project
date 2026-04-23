@@ -10,7 +10,7 @@
 shadow-stack-project/
 ├── .github/workflows/ci.yml    # CI: npm ci + npm run build на push/PR в main
 ├── .claude/settings.json       # включает MCP-серверы из .mcp.json
-├── .mcp.json                   # описания MCP-серверов (Obsidian, Supermemory)
+├── .mcp.json                   # MCP-серверы (Obsidian, Memory, Doppler)
 ├── src/
 │   ├── App.jsx                 # корневой компонент
 │   ├── App.css                 # стили компонента
@@ -60,20 +60,29 @@ CI прогоняет `npm ci` и `npm run build` на GitHub Actions при pus
 - Vault можно открыть в **Obsidian Desktop** для графа знаний, backlinks, поиска
 - **Лучше всего для**: многопроектные заметки, идеи, ссылки между темами, дневник сессий
 
-### Слой 3: Supermemory MCP (auto-capture)
+### Слой 3: MCP Memory (knowledge graph, бесплатно)
 
-- Конфиг: `.mcp.json` → сервер `supermemory`
-- Требует `SUPERMEMORY_API_KEY` в env + платный Supermemory Pro аккаунт
-- Автоматически сохраняет контекст между сессиями, внедряет профиль в новые сессии
-- **Лучше всего для**: кросс-проектная память, long-term preferences, "что я делал месяц назад"
+- Конфиг: `.mcp.json` → сервер `memory`
+- Пакет: `@modelcontextprotocol/server-memory` (официальный, от Anthropic)
+- Хранит факты локально в виде knowledge graph (сущности + связи)
+- Бесплатный, без ключей, без платных подписок
+- **Лучше всего для**: запоминание фактов между сессиями, preferences, контекст
+
+### Слой 4: Doppler MCP (secrets management)
+
+- Конфиг: `.mcp.json` → сервер `doppler`
+- Централизованное хранение и синхронизация секретов (API-ключи, токены, env-переменные)
+- Требует `DOPPLER_TOKEN` или предварительный `npx @dopplerhq/mcp-server login`
+- **Лучше всего для**: управление секретами между средами (dev/staging/prod), командная работа
 
 **Рекомендованная стратегия:**
 
 | Что запоминать | Куда |
 |---|---|
 | Команды проекта, стек, конвенции | `CLAUDE.md` |
-| Статус задач, идеи, ссылки между темами | Obsidian (`ObsidianVault/Projects/shadow-stack-project.md`) |
-| Личные preferences, кросс-проектная история | Supermemory |
+| Статус задач, идеи, ссылки между темами | Obsidian (`ObsidianVault/Projects/`) |
+| Факты, предпочтения, кросс-проектный контекст | MCP Memory (knowledge graph) |
+| Секреты, API-ключи, env-переменные | Doppler |
 
 ---
 
@@ -87,18 +96,32 @@ CI прогоняет `npm ci` и `npm run build` на GitHub Actions при pus
 
 Путь vault: `~/ObsidianVault` (можно переопределить `OBSIDIAN_VAULT_PATH` env var).
 
-### Supermemory MCP — нужен API-ключ
+### MCP Memory — готов из коробки
 
-1. Зарегистрируйтесь на https://supermemory.ai (Pro-план)
-2. Сгенерируйте API-ключ в dashboard
-3. Экспортируйте перед запуском Claude Code:
-   ```bash
-   export SUPERMEMORY_API_KEY="sm_..."
-   ```
-   Или положите в `~/.bashrc` / `~/.zshrc` / `~/.profile`.
-4. Перезапустите Claude Code → approve → готово
+Работает сразу, без ключей. Хранит факты в локальном knowledge graph.
 
-**Без ключа** сервер не стартует, но остальное (CLAUDE.md + Obsidian) продолжит работать.
+Проверка:
+```
+> запомни, что я предпочитаю Conventional Commits
+```
+Claude использует `memory:create_entities`. В следующей сессии спросите — вспомнит.
+
+### Doppler MCP — нужен токен
+
+Два способа авторизации:
+
+**Способ А — интерактивный логин (разово):**
+```bash
+npx @dopplerhq/mcp-server login
+```
+
+**Способ Б — сервис-токен:**
+```bash
+export DOPPLER_TOKEN="dp.st.dev.xxxx..."
+```
+Сгенерируйте на https://dashboard.doppler.com → Project → Access.
+
+После авторизации перезапустите Claude Code. Без токена сервер не стартует, остальные MCP работают.
 
 ---
 
@@ -122,11 +145,17 @@ npm ci && npm run build
 ```
 Claude должен использовать `obsidian:create_note` (или аналогичный) MCP tool. В `~/ObsidianVault/References/test.md` появится файл.
 
-### Supermemory MCP активен
+### MCP Memory активен
 ```
-> supermemory: запомни, что я предпочитаю Conventional Commits
+> запомни, что я предпочитаю TypeScript над JavaScript
 ```
-Ответ должен содержать tool call `supermemory:*`. В следующей сессии profile должен упомянуть этот факт.
+Ответ должен содержать tool call `memory:create_entities`. В следующей сессии: `> что ты помнишь обо мне?`
+
+### Doppler MCP активен
+```
+> покажи секреты проекта в Doppler
+```
+Claude использует `doppler:list_secrets`. Если видите список — Doppler подключён.
 
 ### Git status чистый
 ```bash

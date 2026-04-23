@@ -7,11 +7,15 @@
         "OBSIDIAN_VAULT_PATH": "${OBSIDIAN_VAULT_PATH:-~/ObsidianVault}"
       }
     },
-    "supermemory": {
+    "memory": {
       "command": "npx",
-      "args": ["-y", "supermemory"],
+      "args": ["-y", "@modelcontextprotocol/server-memory"]
+    },
+    "doppler": {
+      "command": "npx",
+      "args": ["-y", "@dopplerhq/mcp-server"],
       "env": {
-        "SUPERMEMORY_API_KEY": "${SUPERMEMORY_API_KEY}"
+        "DOPPLER_TOKEN": "${DOPPLER_TOKEN}"
       }
     }
   }
